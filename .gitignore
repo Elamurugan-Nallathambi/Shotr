@@ -1,0 +1,27 @@
+node_modules/
+dist/
+coverage/
+
+# Desktop app (Electron) build artifacts
+apps/*/out/
+apps/*/release/
+
+# Capture outputs
+shots/
+reports/
+
+# Auth sessions (may contain secrets)
+auth/
+*.storageState.json
+
+# Logs & runtime
+*.log
+/tmp/shotr-*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+.playwright-mcp/
