@@ -1,0 +1,57 @@
+{
+  "name": "shotr",
+  "version": "0.1.0",
+  "description": "Config-driven, cross-platform web screenshot capture tool with evidence headers and HTML/PDF/Word reports.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "shotr": "dist/cli/index.js"
+  },
+  "exports": {
+    ".": { "types": "./dist/cli/index.d.ts", "default": "./dist/cli/index.js" },
+    "./engine": { "types": "./dist/engine.d.ts", "default": "./dist/engine.js" }
+  },
+  "files": [
+    "dist",
+    "configs/example.config.yaml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/cli/index.ts",
+    "shotr": "tsx src/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "prepare": "playwright install chromium"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "dayjs": "^1.11.13",
+    "docx": "^9.1.0",
+    "playwright": "^1.49.1",
+    "sharp": "^0.33.5",
+    "yaml": "^2.6.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1",
+    "vitest": "^2.1.8"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

@@ -1,0 +1,100 @@
+# shotr capture configuration — example
+# Run: shotr capture -c configs/example.config.yaml --profile laptop
+
+projectName: Customer Portal
+environment: QA
+baseUrl: https://playwright.dev
+
+# Device/system profiles. Run the same page set across one or more with --profile.
+profiles:
+  laptop:
+    width: 1440
+    height: 900
+    deviceScaleFactor: 1
+  desktop:
+    width: 1920
+    height: 1080
+    deviceScaleFactor: 1
+  mobile:
+    width: 390
+    height: 844
+    deviceScaleFactor: 3
+    isMobile: true
+
+# Defaults applied to every page (page-level settings override these).
+defaults:
+  profile: laptop
+  waitUntil: networkidle
+  capture:
+    # Capture the entire scrolled page. `fullPage: true` also auto-scrolls the
+    # page first so lazy-loaded content renders (set `autoScroll: false` to skip).
+    fullPage: true
+  outputDir: ./shots
+  timestampFormat: YYYY-MM-DD HH:mm:ss
+
+# Evidence header + fake browser URL bar composited on top of each screenshot.
+header:
+  enabled: true
+  height: 96
+  includeProjectName: true
+  includeEnvironment: true
+  includePageTitle: true
+  includeUrl: true
+  includeTimestamp: true
+  includeViewport: true
+  includeBrowser: true
+  includeUrlBar: true
+  notes: ''
+  os: windows
+
+# "Floating" backdrop: place the screenshot card on a gradient with padding,
+# rounded corners and a soft shadow (CleanShot / ray.so style). Toggle per run
+# with --frame. Disabled by default.
+frame:
+  enabled: false
+  padding: 64
+  radius: 12
+  shadow: true
+  shadowBlur: 28
+  shadowOpacity: 0.35
+  background:
+    type: gradient        # gradient | solid
+    from: '#6366f1'
+    to: '#a855f7'
+    angle: 135            # degrees
+
+# Default file naming: shots/<date>/<pageId>_<counter>.png
+fileNamePattern: '{date}/{pageId}_{counter}.png'
+
+# Optional authentication. shotr logs in ONCE, saves the browser session to
+# `storageState`, then reuses it for every page in the run.
+auth:
+  enabled: false
+  storageState: ./auth/session.json
+  loginUrl: /login
+  loginScript:
+    - fill: { selector: '#username', value: '${LOGIN_USER}' }
+    - fill: { selector: '#password', value: '${LOGIN_PASS}' }
+    - click: 'button[type=submit]'
+    - waitForSelector: '#dashboard'
+
+pages:
+  - id: home
+    title: Home Page
+    path: /
+
+  - id: docs-intro
+    title: Docs — Introduction
+    path: /docs/intro
+    capture:
+      mode: fullPage
+
+  - id: api-page
+    title: API Reference
+    path: /docs/api/class-playwright
+    actions:
+      - waitForSelector: 'h1'
+      - wait: 500
+    capture:
+      mode: viewport       # just the visible viewport
+      autoScroll: false    # explicit (default for non-fullPage)
