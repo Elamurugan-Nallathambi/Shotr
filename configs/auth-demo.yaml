@@ -1,0 +1,41 @@
+# Auth demo config — exercises scripted login, session reuse, auto-login.
+#
+# Credentials come from env vars; never put them in this file:
+#   export LOGIN_USER='you@example.com'
+#   export LOGIN_PASS='…'
+#
+# Try it:
+#   shotr auth setup -c configs/auth-demo.yaml      # log in once
+#   shotr capture    -c configs/auth-demo.yaml      # reuse the session
+#   shotr capture    -c configs/auth-demo.yaml --login   # force re-login
+
+projectName: Auth Demo
+environment: live
+baseUrl: https://www.testportal.com
+
+profiles:
+  laptop:
+    width: 1440
+    height: 900
+
+defaults:
+  profile: laptop
+  waitUntil: networkidle
+
+auth:
+  enabled: true
+  storageState: ./auth/session.json
+  loginUrl: /Login.html
+  loginScript:
+    - fill: { selector: '#username', value: '${LOGIN_USER}' }
+    - fill: { selector: '#j_password', value: '${LOGIN_PASS}' }
+    - press: 'Enter'
+    - waitForSelector: 'a[href*="logout"]' # confirms login landed
+
+pages:
+  - id: my-tests
+    title: My Tests (authenticated)
+    path: /manager/LoadMyTests.html
+    capture:
+      fullPage: true
+      waitForSelector: 'a[href*="logout"]' # capture only succeeds if logged in
