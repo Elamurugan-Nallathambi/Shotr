@@ -1,0 +1,33 @@
+{
+  "name": "shotr-desktop",
+  "version": "0.1.0",
+  "description": "shotr Desktop — screen/window/region capture with an annotation editor.",
+  "license": "MIT",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "package": "electron-vite build && electron-builder"
+  },
+  "dependencies": {
+    "playwright": "^1.51.0",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "shotr": "workspace:*",
+    "@types/node": "^22.13.0",
+    "fabric": "^6.6.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.0.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}

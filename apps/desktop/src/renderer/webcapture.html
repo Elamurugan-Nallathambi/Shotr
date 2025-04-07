@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" />
+    <title>Shotr — Web Pages</title>
+    <style>
+      :root { --bg:#0b1220; --panel:#131d33; --panel2:#0e1730; --border:#233148; --text:#eaf0fb; --muted:#8a97ad; --accent:#6366f1; --accent2:#a855f7; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; }
+      body { font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); display:flex; height:100vh; overflow:hidden; }
+      h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 0 0 12px; }
+
+      /* Sidebar */
+      .sidebar { width: 230px; flex: none; background: var(--panel2); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+      .sidebar .top { padding: 16px 14px; }
+      .brand { font-weight: 700; font-size: 16px; background: linear-gradient(135deg,#c7d2fe,#e9d5ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+      .brand small { display:block; color:var(--muted); font-size:11px; font-weight:400; -webkit-text-fill-color: var(--muted); }
+      .projects { flex:1; overflow:auto; padding: 4px 8px; }
+      .proj { padding:9px 10px; border-radius:9px; cursor:pointer; font-size:13px; color:var(--text); }
+      .proj:hover { background:#18243f; }
+      .proj.active { background:#1d2c4d; }
+      .proj .u { font-size:11px; color:var(--muted); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .newbtn { margin:8px; padding:10px; border-radius:9px; border:1px dashed #33476b; background:none; color:#c7d2fe; cursor:pointer; font-size:13px; }
+      .newbtn:hover { background:#18243f; }
+
+      /* Main */
+      .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+      .scroll { flex:1; overflow:auto; padding: 22px 26px; }
+      .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-bottom:16px; }
+      .row { display:flex; gap:12px; flex-wrap:wrap; }
+      .field { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; flex:1; min-width:140px; }
+      .field.full { flex-basis:100%; }
+      label { font-size:12px; color:var(--muted); }
+      input[type=text], input[type=url], input[type=password], input[type=number], select {
+        background:var(--panel2); border:1px solid #2b3b5c; border-radius:9px; color:var(--text); padding:9px 11px; font-size:13px; outline:none; }
+      input:focus, select:focus { border-color:var(--accent); }
+      .check { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text); }
+      .toggle-head { display:flex; align-items:center; justify-content:space-between; }
+      .seg { display:inline-flex; background:var(--panel2); border:1px solid #2b3b5c; border-radius:10px; padding:3px; gap:3px; }
+      .segbtn { background:none; border:none; color:var(--muted); padding:7px 14px; border-radius:8px; cursor:pointer; font-size:12.5px; }
+      .segbtn.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-weight:600; }
+      .manualbar { display:flex; align-items:center; gap:10px; margin-top:6px; }
+      .manualbar .spacer { flex:1; }
+      .sess { font-size:12.5px; color:var(--muted); }
+      .sess.ok { color:#34d399; }
+      .sess.live { color:#fbbf24; }
+      .manualhint { margin-top:10px; font-size:11.5px; color:var(--muted); line-height:1.5; }
+      .manualhint b { color:#c7d2fe; }
+
+      table.pages { width:100%; border-collapse:collapse; }
+      table.pages th { text-align:left; font-size:11px; color:var(--muted); font-weight:600; padding:4px 6px; }
+      table.pages td { padding:4px 6px; }
+      table.pages input[type=text] { width:100%; }
+      .iconbtn { background:none; border:1px solid #33476b; color:var(--muted); border-radius:8px; cursor:pointer; padding:6px 9px; font-size:13px; }
+      .iconbtn:hover { color:#fff; border-color:var(--accent); }
+      .addrow { margin-top:8px; }
+
+      /* Footer */
+      .footer { border-top:1px solid var(--border); background:var(--panel2); padding:12px 18px; display:flex; gap:10px; align-items:center; }
+      .footer .spacer { flex:1; }
+      button.btn { padding:10px 16px; border-radius:10px; border:1px solid var(--border); background:var(--panel); color:var(--text); cursor:pointer; font-size:13px; transition:transform .05s, background .1s; }
+      button.btn:hover { background:#1b2741; }
+      button.btn:active { transform:scale(.97); }
+      button.btn.primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; color:#fff; font-weight:700; }
+      button.btn.danger:hover { background:#7f1d1d; border-color:#7f1d1d; }
+      button.btn:disabled { opacity:.5; cursor:default; }
+
+      /* Progress / results overlay */
+      .progress { position:fixed; inset:0; background:rgba(2,6,23,.82); display:none; align-items:center; justify-content:center; }
+      .progress.show { display:flex; }
+      .progress .box { width:660px; max-width:92vw; max-height:86vh; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:20px; display:flex; flex-direction:column; }
+      .phead { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+      .phead h3 { margin:0; font-size:17px; }
+      .phead .badge { font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px; background:#1d2c4d; color:#c7d2fe; }
+      .phead .spin { width:15px; height:15px; border:2px solid #334155; border-top-color:#a855f7; border-radius:50%; animation:spin .7s linear infinite; }
+      @keyframes spin { to { transform:rotate(360deg); } }
+      .content { flex:1; overflow:auto; min-height:150px; }
+      .live { font:12px ui-monospace,Menlo,monospace; line-height:1.7; }
+      .live .ok { color:#34d399; } .live .err { color:#f87171; } .live .log { color:#7e8aa0; }
+      .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(186px,1fr)); gap:13px; }
+      .gcard { background:var(--panel2); border:1px solid var(--border); border-radius:11px; overflow:hidden; }
+      .gcard img { width:100%; height:116px; object-fit:cover; object-position:top center; display:block; background:#0b1220; cursor:zoom-in; }
+      .gcard .noimg { height:116px; display:grid; place-items:center; color:var(--muted); font-size:12px; }
+      .gcard .cap { padding:9px 11px; }
+      .gcard .cap .t { font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:7px; }
+      .gcard .cap .u { font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+      .gcard .cap .err { font-size:11px; color:#f87171; margin-top:3px; }
+      .dot { width:8px; height:8px; border-radius:50%; flex:none; }
+      .dot.ok { background:#34d399; } .dot.err { background:#f87171; }
+      .pfoot { display:flex; align-items:center; gap:10px; margin-top:15px; }
+      .pfoot .sum { font-size:13px; color:var(--text); }
+      .pfoot .spacer { flex:1; }
+      .hidden { display:none; }
+      .toast { position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-16px); background:#b45309; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 10px 30px rgba(0,0,0,.4); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:60; }
+      .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+      input.invalid { border-color:#f87171 !important; }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="top"><div class="brand">Shotr <small>Web Pages</small></div></div>
+      <div class="projects" id="projects"></div>
+      <button class="newbtn" id="new">+ New project</button>
+    </div>
+
+    <div class="main">
+      <div class="scroll">
+        <div class="card">
+          <h2>Project</h2>
+          <div class="row">
+            <div class="field"><label>Name</label><input type="text" id="name" /></div>
+            <div class="field"><label>Environment</label><input type="text" id="environment" /></div>
+          </div>
+          <div class="field full"><label>Base URL</label><input type="url" id="baseUrl" placeholder="https://app.example.com" /></div>
+        </div>
+
+        <div class="card">
+          <div class="toggle-head"><h2>Authentication</h2><label class="check"><input type="checkbox" id="authEnabled" /> Required</label></div>
+          <div id="authFields" class="hidden">
+            <div class="field full">
+              <label>Login method</label>
+              <div class="seg" id="authModeSeg">
+                <button type="button" class="segbtn active" data-mode="scripted">Username &amp; password</button>
+                <button type="button" class="segbtn" data-mode="manual">SSO / manual login</button>
+              </div>
+            </div>
+            <div class="field full"><label>Login / portal URL (path or absolute)</label><input type="text" id="loginUrl" placeholder="/login" /></div>
+
+            <div id="scriptedFields">
+              <div class="row">
+                <div class="field"><label>Username selector</label><input type="text" id="usernameSelector" placeholder="#username" /></div>
+                <div class="field"><label>Username</label><input type="text" id="username" /></div>
+              </div>
+              <div class="row">
+                <div class="field"><label>Password selector</label><input type="text" id="passwordSelector" placeholder="#password" /></div>
+                <div class="field"><label>Password</label><input type="password" id="password" placeholder="required to run" autocomplete="off" /></div>
+              </div>
+              <div class="row">
+                <div class="field"><label>Submit selector (blank = press Enter)</label><input type="text" id="submitSelector" placeholder="button[type=submit]" /></div>
+                <div class="field"><label>Success selector</label><input type="text" id="successSelector" placeholder="#dashboard" /></div>
+              </div>
+            </div>
+
+            <div id="manualFields" class="hidden">
+              <div class="manualbar" id="manualIdle">
+                <button class="btn" id="manualLogin">🔐 Log in in browser</button>
+                <span class="sess" id="sessionStatus">No saved session</span>
+                <span class="spacer"></span>
+                <button class="btn" id="clearSession">Clear session</button>
+              </div>
+              <div class="manualbar hidden" id="manualActive">
+                <span class="sess live">Browser open — sign in, then:</span>
+                <span class="spacer"></span>
+                <button class="btn" id="cancelSession">Cancel</button>
+                <button class="btn primary" id="saveSession">Save session</button>
+              </div>
+              <div class="manualhint">A real browser opens — sign in (Google / Microsoft / Okta / any SSO works). When you reach the logged-in page, click <b>Save session</b>. Shotr stores the cookies &amp; browser storage so your test runs reuse the login — no password needed.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Pages</h2>
+          <table class="pages">
+            <thead><tr><th style="width:24%">Title</th><th style="width:34%">Path / URL</th><th style="width:14%">Full page</th><th style="width:22%">Wait for selector</th><th></th></tr></thead>
+            <tbody id="pages"></tbody>
+          </table>
+          <button class="iconbtn addrow" id="addPage">+ Add page</button>
+        </div>
+
+        <div class="card">
+          <h2>Settings</h2>
+          <div class="row">
+            <div class="field"><label>Width</label><input type="number" id="width" min="320" /></div>
+            <div class="field"><label>Height</label><input type="number" id="height" min="320" /></div>
+            <div class="field"><label>Browser</label>
+              <select id="browser"><option>chromium</option><option>chrome</option><option>edge</option><option>firefox</option><option>webkit</option><option>safari</option></select>
+            </div>
+            <div class="field"><label>URL-bar OS style</label>
+              <select id="os"><option value="auto">auto</option><option value="macos">macOS</option><option value="windows">Windows</option><option value="linux">Linux</option></select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:6px">
+            <label class="check"><input type="checkbox" id="header" /> Evidence header + URL bar</label>
+            <label class="check"><input type="checkbox" id="frame" /> Floating gradient frame</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button class="btn primary" id="run">▶ Run capture</button>
+        <button class="btn" id="save">Save</button>
+        <button class="btn" id="export">Export YAML</button>
+        <button class="btn" id="import">Import YAML</button>
+        <span class="spacer"></span>
+        <button class="btn danger" id="delete">Delete</button>
+      </div>
+    </div>
+
+    <div class="progress" id="progress">
+      <div class="box">
+        <div class="phead">
+          <span class="spin" id="spin"></span>
+          <h3 id="progressTitle">Capturing…</h3>
+          <span class="badge hidden" id="progressBadge"></span>
+        </div>
+        <div class="content">
+          <div class="live" id="live"></div>
+          <div class="gallery hidden" id="gallery"></div>
+        </div>
+        <div class="pfoot">
+          <span class="sum" id="resultSum">Working…</span>
+          <span class="spacer"></span>
+          <button class="btn hidden" id="openFolder">Open folder</button>
+          <button class="btn primary hidden" id="openReport">Open report</button>
+          <button class="btn" id="closeProgress">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script type="module" src="./webcapture.ts"></script>
+  </body>
+</html>

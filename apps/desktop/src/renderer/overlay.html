@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>shotr — select region</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; cursor: crosshair; user-select: none; background: #000; }
+      #shot { position: fixed; inset: 0; width: 100vw; height: 100vh; -webkit-user-drag: none; }
+      /* Dim everything except the selection via a huge spread shadow (clean cutout). */
+      #sel {
+        position: fixed; left: 0; top: 0; width: 0; height: 0;
+        border: 1.5px solid #38bdf8;
+        box-shadow: 0 0 0 100vmax rgba(15, 23, 42, 0.5);
+        display: none; pointer-events: none; z-index: 4;
+      }
+      /* Whole-screen dim before a drag begins. */
+      #predim { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 2; pointer-events: none; }
+      .guide { position: fixed; background: rgba(56, 189, 248, 0.6); z-index: 3; pointer-events: none; }
+      #vline { width: 1px; height: 100vh; top: 0; }
+      #hline { height: 1px; width: 100vw; left: 0; }
+      #size {
+        position: fixed; display: none; z-index: 6; pointer-events: none;
+        background: #0ea5e9; color: #fff; font: 600 12px -apple-system, Segoe UI, Roboto, sans-serif;
+        padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+      }
+      #hint {
+        position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 6;
+        color: #e2e8f0; font: 13px -apple-system, Segoe UI, Roboto, sans-serif;
+        background: rgba(2, 6, 23, 0.75); padding: 7px 16px; border-radius: 20px; pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <img id="shot" alt="" />
+    <div id="predim"></div>
+    <div id="vline" class="guide"></div>
+    <div id="hline" class="guide"></div>
+    <div id="sel"></div>
+    <div id="size"></div>
+    <div id="hint">Drag to capture a region · Esc to cancel</div>
+    <script type="module" src="./overlay.ts"></script>
+  </body>
+</html>

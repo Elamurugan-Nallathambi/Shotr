@@ -1,0 +1,31 @@
+appId: dev.shotr.desktop
+productName: Shotr
+# Sharp needs its native binary rebuilt for the target arch.
+npmRebuild: true
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**
+  - package.json
+# Native modules + bundled Chromium must live outside the asar.
+asarUnpack:
+  - "**/node_modules/sharp/**"
+  - "**/node_modules/@img/**"
+  - "**/node_modules/playwright/**"
+  - "**/node_modules/playwright-core/**"
+  - "**/node_modules/.pnpm/**/playwright-core/**"
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.png
+  target:
+    - dmg
+  # Screen Recording is a macOS TCC permission granted at first capture;
+  # no Info.plist usage string is required for it.
+win:
+  target:
+    - nsis
+linux:
+  target:
+    - AppImage
+  category: Utility

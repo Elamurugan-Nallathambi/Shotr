@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>shotr — pick a window</title>
+    <style>
+      body { margin: 0; font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #e2e8f0; padding: 16px; }
+      h1 { font-size: 15px; margin: 0 0 12px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+      .win { border: 1px solid #334155; border-radius: 10px; overflow: hidden; cursor: pointer; background: #1e293b; }
+      .win:hover { border-color: #2563eb; }
+      .win img { width: 100%; height: 110px; object-fit: cover; display: block; background: #0b1220; }
+      .win .name { font-size: 12px; padding: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .empty { color: #94a3b8; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <h1>Pick a window to capture · Esc to cancel</h1>
+    <div class="grid" id="grid"><div class="empty">Loading windows…</div></div>
+    <script type="module" src="./picker.ts"></script>
+  </body>
+</html>

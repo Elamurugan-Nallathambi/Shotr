@@ -189,6 +189,20 @@ pnpm build
 pnpm test:e2e    # requires Playwright browsers
 ```
 
+## Desktop app (screen capture + annotate)
+
+This repo also ships a native **desktop screen-capture app** at
+[`apps/desktop`](apps/desktop) — a global hotkey captures the OS screen / a
+window / a drag-selected region, copies it to the clipboard, and opens an
+annotation editor (pencil, text, shapes; all movable/resizable) to copy or save.
+
+```bash
+pnpm --filter shotr-desktop dev
+```
+
+See [apps/desktop/README.md](apps/desktop/README.md) for hotkeys, the macOS
+Screen Recording permission, configuration, and packaging.
+
 ## License
 
 MIT
