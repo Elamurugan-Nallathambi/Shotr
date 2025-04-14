@@ -81,6 +81,15 @@ cmd_capture() {
   fi
 }
 
+cmd_desktop() {
+  check_prereqs
+  if [ "$PM" != "pnpm" ]; then
+    err "The desktop app uses pnpm workspaces. Install pnpm first."; exit 1
+  fi
+  log "Launching the shotr desktop capture app (dev)…"
+  pnpm --filter shotr-desktop dev
+}
+
 # Service-style verbs are informational: shotr is a one-shot CLI, not a daemon.
 cmd_start()   { warn "shotr is a one-shot CLI, not a service. Use: ./setup.sh capture -- -c <config>"; }
 cmd_stop()    { warn "Nothing to stop — shotr runs to completion and exits."; }
@@ -104,6 +113,7 @@ Usage: ./setup.sh <command> [-- <args passed to the CLI>]
   lint             Run ESLint
   clean            Remove dist/, coverage/, shots/, reports/
   capture ...      Run a capture, e.g.  ./setup.sh capture -c configs/example.config.yaml
+  desktop          Launch the desktop screen-capture app (apps/desktop, dev mode)
   status           Show install/build status
   help             Show this help
 
@@ -120,6 +130,7 @@ main() {
     lint)    cmd_lint ;;
     clean)   cmd_clean ;;
     capture) cmd_capture "$@" ;;
+    desktop) cmd_desktop ;;
     start)   cmd_start ;;
     stop)    cmd_stop ;;
     restart) cmd_restart ;;

@@ -11,7 +11,7 @@ shots/
 reports/
 
 # Auth sessions (may contain secrets)
-auth/
+/auth/
 *.storageState.json
 
 # Logs & runtime

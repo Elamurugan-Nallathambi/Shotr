@@ -62,12 +62,21 @@ frame:
     from: '#6366f1'
     to: '#a855f7'
     angle: 135            # degrees
+    # colors: ['#0ea5e9', '#6366f1', '#a855f7']  # optional multi-stop
+    # type: solid; color: '#0f172a'              # for a flat background
 
 # Default file naming: shots/<date>/<pageId>_<counter>.png
 fileNamePattern: '{date}/{pageId}_{counter}.png'
 
 # Optional authentication. shotr logs in ONCE, saves the browser session to
 # `storageState`, then reuses it for every page in the run.
+#
+# Two ways to log in:
+#   - Scripted (CI-friendly):   define loginScript below, then `shotr auth setup`
+#                               (or just run `capture` — it auto-logs in if needed)
+#   - Manual (SSO/captcha):     `shotr auth login` opens a browser to log in by hand
+#
+# Keep credentials OUT of this file: reference env vars with ${VAR}.
 auth:
   enabled: false
   storageState: ./auth/session.json

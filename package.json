@@ -1,6 +1,6 @@
 {
   "name": "shotr",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Config-driven, cross-platform web screenshot capture tool with evidence headers and HTML/PDF/Word reports.",
   "license": "MIT",
   "type": "module",
@@ -53,5 +53,5 @@
     "typescript-eslint": "^8.18.1",
     "vitest": "^2.1.8"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@10.8.0"
 }

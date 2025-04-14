@@ -14,9 +14,9 @@ export default defineConfig({
         'src/cli/**',
         'src/**/index.ts',
         'src/**/types.ts',
-        'src/capture/page-like.ts',
-        'src/capture/browser.ts',
-        'src/auth/session.ts',
+        'src/capture/page-like.ts', // interface declarations only
+        'src/capture/browser.ts', // thin Playwright launch wrapper, covered by e2e
+        'src/auth/session.ts', // interactive headed-browser login, covered manually
       ],
       thresholds: {
         lines: 90,
