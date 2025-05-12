@@ -17,6 +17,8 @@ export interface DesktopConfig {
   format: ImageFormat;
   jpegQuality: number;
   copyOnCapture: boolean;
+  /** Start hidden in the menu bar / tray (no control window) on launch. */
+  runInBackground: boolean;
 }
 
 /** Built-in defaults (saveDir relative to the user's home). */
@@ -31,6 +33,7 @@ export function defaultConfig(home: string = homedir()): DesktopConfig {
     format: 'png',
     jpegQuality: 90,
     copyOnCapture: true,
+    runInBackground: false,
   };
 }
 
@@ -58,6 +61,8 @@ export function mergeConfig(
     format: p.format === 'jpeg' || p.format === 'png' ? p.format : base.format,
     jpegQuality: clampQuality(p.jpegQuality, base.jpegQuality),
     copyOnCapture: typeof p.copyOnCapture === 'boolean' ? p.copyOnCapture : base.copyOnCapture,
+    runInBackground:
+      typeof p.runInBackground === 'boolean' ? p.runInBackground : base.runInBackground,
   };
 }
 

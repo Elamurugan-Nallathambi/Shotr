@@ -1,153 +1,127 @@
 # shotr
 
-> Config-driven, cross-platform web screenshot capture tool with evidence headers and HTML/PDF/Word reports.
+> Capture screenshots — **web pages** (headless, config-driven) and your **screen** (native desktop app) — annotate, and export evidence reports. Cross-platform (macOS / Windows / Linux).
 
-**shotr** runs like a test runner — but instead of asserting behavior, it opens each
-configured page at a defined viewport/device profile, runs optional setup actions,
-captures the page, and stamps an **evidence header + fake browser URL bar** onto the
-image. Captures are saved under `shots/` and a run can be exported as **HTML, PDF, and
-Word** reports for QA evidence, release notes, audits, and support.
+shotr is two things that share one engine:
 
-Works on **macOS, Windows, and Linux** (Node + Playwright + Sharp).
+1. **`shotr` CLI** — a config-driven web-page screenshot tool. Point it at a list of URLs (with optional login), and it captures consistent, headered screenshots across device profiles and exports **HTML / PDF / Word** reports. Runs like a test suite.
+2. **shotr Desktop** — a native app (`apps/desktop`) for **region / window / full-screen** capture with an annotation editor, plus a UI front-end for the web-capture engine (no YAML, no terminal) and a menu-bar **background mode**.
 
-## Quick start
+---
+
+## Contents
+
+- [Install](#install)
+- [CLI — web-page screenshots](#cli--web-page-screenshots)
+  - [Config](#config) · [Profiles](#profiles) · [Browsers](#browsers) · [Full-page](#full-page-scrolled-capture) · [Header & OS bar](#header--url-bar) · [Floating frame](#floating-frame) · [Authentication](#authentication) · [Reports](#reports) · [Commands](#cli-commands)
+- [Desktop app](#desktop-app)
+  - [Screen capture & editor](#screen-capture--editor) · [Background / menu-bar mode](#background--menu-bar-mode) · [Web-capture UI](#web-capture-ui) · [Packaging](#packaging)
+- [Development](#development)
+
+---
+
+## Install
 
 ```bash
-git clone <repo> shotr && cd shotr
-./setup.sh setup            # installs deps + Playwright Chromium + builds
-
-# edit configs/example.config.yaml, then:
-shotr capture -c configs/example.config.yaml --profile laptop
+git clone https://github.com/Elamurugan-Nallathambi/Shotr.git shotr && cd shotr
+./setup.sh setup            # installs deps + Playwright Chromium + builds the CLI
 ```
 
-> No global install? Use `./setup.sh capture -c configs/example.config.yaml`
-> or `pnpm shotr capture -c ...` during development.
+> Uses **pnpm** (falls back to npm). Node 20+. The repo is a pnpm workspace: the
+> root is the CLI, `apps/desktop` is the Electron app.
 
-## Commands
+Run the CLI:
 
-| Command | Purpose |
-| --- | --- |
-| `shotr init [-o config.yaml]` | Write a starter config file |
-| `shotr capture -c <config> [opts]` | Capture screenshots for every page × profile |
-| `shotr report -c <config> --from <run.json>` | Regenerate reports from a saved run manifest |
-| `shotr auth setup -c <config>` | Run the declarative `loginScript` once and save the session |
-| `shotr auth login -c <config>` | Open a headed browser, log in manually, save the session |
+```bash
+shotr capture -c configs/example.config.yaml --profile laptop
+# or, without a global install:
+node dist/cli/index.js capture -c configs/example.config.yaml
+pnpm shotr capture -c configs/example.config.yaml     # dev (tsx)
+```
 
-### `capture` options
+---
 
-| Flag | Description |
-| --- | --- |
-| `-c, --config <path>` | Config file (YAML or JSON) — required |
-| `--profile <name...>` | One or more profiles to run (default: `defaults.profile`) |
-| `--page <id...>` | Only capture these page ids |
-| `--tag <tag...>` | Only capture pages with these tags |
-| `--browser <name>` | `chromium` (default), `chrome`, `edge`, `firefox`, `webkit`, `safari` — see [Browsers](#browsers) |
-| `--full-page` | Force full-page (scrolled) capture for every page, with auto-scroll |
-| `--frame` | Wrap each screenshot in a floating gradient backdrop (shadow + rounded corners) |
-| `--os <name>` | URL-bar window-control style: `macos`, `windows`, `linux`, `auto` |
-| `--headed` | Run with a visible browser window |
-| `--out <dir>` | Override output directory |
-| `--report <list>` | Comma list of `html,pdf,word` (default: `html`) |
+## CLI — web-page screenshots
 
-## Configuration
+shotr opens each configured page at a device profile, runs optional setup
+actions, captures the page, and stamps an **evidence header + fake browser URL
+bar** onto the image. It doesn't assert behaviour — it captures, like a test
+runner, for QA evidence, release notes, audits, and support.
 
-See [`configs/example.config.yaml`](configs/example.config.yaml). Highlights:
+### Config
 
-- **profiles** — named viewport/device specs; run a page set across many with `--profile`.
-- **defaults** — applied to every page; merge precedence is `defaults < profile < page < CLI`.
-- **header** — toggle each field (project, env, title, url, timestamp, viewport, browser) and the fake URL bar.
-- **fileNamePattern** — tokens: `{projectName} {environment} {profile} {pageId} {title} {date} {timestamp} {counter} {browser}`. Default: `{date}/{pageId}_{counter}.png` under `shots/`.
-- **auth** — reuse a saved Playwright `storageState` for authenticated apps.
+A single YAML/JSON file (see [`configs/example.config.yaml`](configs/example.config.yaml)). Merge precedence: `defaults < profile < page < CLI flags`.
 
-## Browsers
+```yaml
+projectName: Customer Portal
+environment: QA
+baseUrl: https://app.example.com
 
-Pick the browser per run with `--browser <name>`, or set `defaults.browser` in the
-config. shotr drives Playwright's three engines and maps friendly names onto them:
+profiles:
+  laptop:  { width: 1440, height: 900 }
+  mobile:  { width: 390,  height: 844, deviceScaleFactor: 3, isMobile: true }
+
+defaults:
+  profile: laptop
+  waitUntil: networkidle
+  capture: { fullPage: true }
+
+header:
+  enabled: true
+  os: macos            # URL-bar style: macos | windows | linux | auto
+
+frame:
+  enabled: false       # floating gradient backdrop
+
+fileNamePattern: '{date}/{pageId}_{counter}.png'   # → shots/2026-01-02/home_001.png
+
+pages:
+  - id: home
+    title: Home
+    path: /
+  - id: dashboard
+    title: Dashboard
+    path: /dashboard
+    actions:
+      - waitForSelector: '#ready'
+      - click: '#expand'
+      - wait: 500
+    capture: { mode: fullPage }
+```
+
+### Profiles
+
+Named viewport/device specs. Run a page set across several with `--profile laptop --profile mobile`. Fields: `width`, `height`, `deviceScaleFactor`, `isMobile`, `userAgent`.
+
+### Browsers
+
+`--browser <name>` (or `defaults.browser`) maps friendly names onto Playwright engines:
 
 | Name | Engine | Notes |
 | --- | --- | --- |
-| `chromium` | Chromium | Playwright's bundled Chromium (default; no extra install). |
-| `chrome` | Chromium | Your installed **Google Chrome** (channel). Requires Chrome on the machine. |
-| `edge` / `msedge` | Chromium | Your installed **Microsoft Edge** (channel). Requires Edge on the machine. |
-| `firefox` | Firefox | Playwright's bundled Firefox. |
-| `webkit` | WebKit | Playwright's bundled WebKit (Safari's engine). |
-| `safari` | WebKit | Alias for `webkit`. Playwright can't drive Safari.app directly, but WebKit is the same engine Safari ships. |
+| `chromium` | Chromium | bundled (default) |
+| `chrome` / `edge` | Chromium | your installed Chrome / Edge (channel) |
+| `firefox` | Firefox | bundled (`pnpm exec playwright install firefox`) |
+| `webkit` / `safari` | WebKit | bundled — Safari's engine |
 
-```bash
-shotr capture -c shotr.config.yaml --browser chrome
-shotr capture -c shotr.config.yaml --browser edge
-shotr capture -c shotr.config.yaml --browser safari   # WebKit engine
-```
+### Full-page (scrolled) capture
 
-```yaml
-defaults:
-  browser: chrome
-```
+`capture.fullPage: true` (or `--full-page`) captures the entire scrolled page and **auto-scrolls** first so lazy-loaded content renders. Disable auto-scroll with `autoScroll: false`.
 
-- **Bundled engines** (`chromium`, `firefox`, `webkit`/`safari`) are installed by
-  `./setup.sh setup`. Add Firefox/WebKit with `pnpm exec playwright install firefox webkit`.
-- **Channel browsers** (`chrome`, `edge`) launch the app already installed on your OS —
-  nothing is downloaded, but the browser must be present.
+### Header & URL bar
 
-## Floating frame (gradient backdrop)
+A header band + a fake browser address bar are composited on top of each shot. Toggle every field (`header.include*`), set `header.os` for the window-control style (macOS dots / Windows / Linux controls), add `notes`, etc.
 
-Make screenshots look like a floating card on a gradient — padding, rounded
-corners, and a soft drop shadow (CleanShot / ray.so style). Toggle per run with
-`--frame`, or configure it under a top-level `frame` block:
+### Floating frame
 
-```yaml
-frame:
-  enabled: true
-  padding: 64          # space around the card, px
-  radius: 12           # card corner radius, px
-  shadow: true
-  shadowBlur: 28
-  shadowOpacity: 0.35
-  background:
-    type: gradient     # gradient | solid
-    from: '#6366f1'
-    to: '#a855f7'
-    angle: 135         # gradient direction, degrees
-```
+`frame.enabled: true` (or `--frame`) places the card on a gradient (or solid) backdrop with padding, rounded corners, and a soft shadow — the "beautiful screenshot" look. Configure `padding`, `radius`, `shadow*`, and `background` (gradient `from`/`to`/`angle` or `colors[]`, or `type: solid`).
 
-```bash
-shotr capture -c shotr.config.yaml --frame            # quick on
-```
+### Authentication
 
-## Full-page (scrolled) capture
+For apps behind a login. shotr logs in **once**, saves the browser session
+(`storageState`), then reuses it for every page.
 
-To capture the **entire scrolled page**, set `fullPage: true` (per page or in
-`defaults.capture`), or pass `--full-page` on the CLI to force it for a whole run:
-
-```yaml
-defaults:
-  capture:
-    fullPage: true     # → mode: fullPage
-    autoScroll: true   # (default when fullPage) scroll through the page first
-```
-
-## Pre-capture actions
-
-Each page may run a sequence of actions before the screenshot is taken:
-
-```yaml
-pages:
-  - id: order
-    title: Order Details
-    path: /orders/12345
-    actions:
-      - waitForSelector: '#order-summary'
-      - click: '#expand-items'
-      - fill: { selector: '#note', value: 'QA evidence' }
-      - wait: 500
-```
-
-## Authentication
-
-For apps behind a login, shotr logs in **once**, saves the browser session to
-`storageState`, then reuses it for every page in the run.
-
-### Scripted login (CI-friendly)
+**Scripted** (CI-friendly) — keep secrets in env vars:
 
 ```yaml
 auth:
@@ -155,53 +129,105 @@ auth:
   loginUrl: /login
   storageState: ./auth/session.json
   loginScript:
-    - fill: { selector: '#username', value: '${SHOTR_USER}' }
-    - fill: { selector: '#password', value: '${SHOTR_PASS}' }
-    - click: 'button[type=submit]'
+    - fill: { selector: '#user', value: '${LOGIN_USER}' }
+    - fill: { selector: '#pass', value: '${LOGIN_PASS}' }
+    - press: 'Enter'
     - waitForSelector: '#dashboard'
 ```
 
 ```bash
-export SHOTR_USER='alice'
-export SHOTR_PASS='…'
-shotr auth setup -c shotr.config.yaml
-shotr capture   -c shotr.config.yaml
+export LOGIN_USER=… LOGIN_PASS=…
+shotr auth setup -c config.yaml     # log in once
+shotr capture    -c config.yaml     # reuses the session (auto-logs in if missing)
 ```
 
-### Manual login (SSO, captcha, MFA)
+**Manual / SSO** — `shotr auth login -c config.yaml` opens a real browser; sign in by hand (SSO/MFA), and the session is saved. `${VAR}` interpolation works anywhere in the config; secrets never live in the YAML.
+
+### Reports
+
+`--report html,pdf,word` writes to `./reports` (a JSON manifest is always written). Each report embeds a thumbnail, title, URL, profile, viewport, browser, timestamp, and status per capture. Regenerate without re-capturing: `shotr report -c config.yaml --from reports/<run>.json`.
+
+### CLI commands
+
+| Command | Purpose |
+| --- | --- |
+| `shotr init [-o config.yaml]` | Write a starter config |
+| `shotr capture -c <config> [opts]` | Capture every page × profile |
+| `shotr report -c <config> --from <run.json>` | Regenerate reports |
+| `shotr auth setup -c <config>` | Scripted login → save session |
+| `shotr auth login -c <config>` | Manual / SSO login → save session |
+
+Capture flags: `--profile <name…>`, `--page <id…>`, `--tag <tag…>`, `--browser <name>`, `--full-page`, `--frame`, `--os <macos\|windows\|linux>`, `--headed`, `--out <dir>`, `--report <list>`, `--login`.
+
+---
+
+## Desktop app
+
+A native capture + annotation app, companion to the CLI. Built with Electron + TypeScript.
 
 ```bash
-shotr auth login -c shotr.config.yaml
+pnpm --filter shotr-desktop dev        # or: ./setup.sh desktop
+pnpm --filter shotr-desktop package    # build a standalone Shotr.app / installer
 ```
 
-## Reports
+### Screen capture & editor
 
-`--report html,pdf,word` writes to `./reports`. Each report embeds a thumbnail,
-page title, URL, profile, viewport, browser, timestamp, and status per capture.
+A frameless control window (and a menu-bar icon) with three modes:
+
+| Mode | Default hotkey |
+| --- | --- |
+| Region (drag-select) | `Cmd/Ctrl + Shift + 4` |
+| Window (pick) | `Cmd/Ctrl + Shift + 5` |
+| Full screen | `Cmd/Ctrl + Shift + 3` |
+
+Hotkeys are **editable** in the control window (click a shortcut chip). Each capture is **copied to the clipboard** and opens the **annotation editor** (Fabric.js): pencil, text, rectangle, ellipse, line, arrow — every object is selectable, movable, resizable. **Copy** or **Save** from the toolbar (`Cmd/Ctrl+Z` undo, `Delete`, `Cmd/Ctrl+C`).
+
+> **macOS:** screen capture needs **Screen Recording** permission. The control window has a one-click guide that deep-links to the right Settings pane and registers the app in the list; toggle Shotr on and relaunch.
+
+### Background / menu-bar mode
+
+shotr lives in the **menu bar / system tray**. Right-click the tray icon for
+Capture Region/Window/Screen, **Web Pages…**, **Show Control Window**, a **Run
+in Background** toggle, and **Quit**. Closing the control window keeps the app
+running in the tray with hotkeys active. Enable **Run in Background** to launch
+straight into the tray with no window (and no dock icon on macOS) — a true
+background capture tool.
+
+### Web-capture UI
+
+**Capture web pages** opens a builder that drives the CLI engine **in-process** — no YAML, no terminal:
+
+- **Project**: name, base URL, environment — saved as **named projects** (passwords encrypted via the OS keychain).
+- **Authentication**: *Username & password* (scripted) **or** *SSO / manual* — click **Log in in browser**, sign in via any SSO, then **Save session** (cookies + storage are stored and reused).
+- **Pages**: add rows — title, path/URL, full-page, wait-for selector.
+- **Settings**: viewport, browser, evidence header + OS bar, floating frame.
+- **Run** → live per-page progress → a **thumbnail gallery** of results → **Open report** / **Open folder**.
+- **Export / Import YAML** — fully interoperable with `shotr capture`.
+
+### Packaging
+
+The standalone build **bundles Chromium + Playwright + Sharp**, so web capture works with no terminal or dev environment:
+
+```bash
+pnpm --filter shotr-desktop package        # → apps/desktop/release/…/Shotr.app
+```
+
+Produces a `.dmg` (mac), `.exe` (win, nsis), or `.AppImage` (linux). Build on the target OS for that OS's installer. (The installer is large — ~800 MB — because Chromium is bundled.)
+
+---
 
 ## Development
 
 ```bash
 pnpm install
-pnpm test
+pnpm build && pnpm test          # root CLI: build + unit tests (+ coverage gate)
+pnpm test:e2e                    # CLI end-to-end (real Chromium)
+pnpm --filter shotr-desktop test # desktop unit tests
 pnpm lint
-pnpm build
-pnpm test:e2e    # requires Playwright browsers
 ```
 
-## Desktop app (screen capture + annotate)
-
-This repo also ships a native **desktop screen-capture app** at
-[`apps/desktop`](apps/desktop) — a global hotkey captures the OS screen / a
-window / a drag-selected region, copies it to the clipboard, and opens an
-annotation editor (pencil, text, shapes; all movable/resizable) to copy or save.
-
-```bash
-pnpm --filter shotr-desktop dev
-```
-
-See [apps/desktop/README.md](apps/desktop/README.md) for hotkeys, the macOS
-Screen Recording permission, configuration, and packaging.
+- **CLI** (`src/`): config (`zod`) → capture (Playwright) → overlay (Sharp) → reports (HTML/PDF via Playwright, Word via `docx`). Engine is re-exported from `src/engine.ts` for embedding.
+- **Desktop** (`apps/desktop/`): Electron main + preload + renderer (electron-vite), Fabric editor, reuses the CLI engine in-process. Pure logic is unit-tested; Electron/GUI code is verified by running.
 
 ## License
 

@@ -11,7 +11,9 @@ import {
   shell,
   safeStorage,
   type NativeImage,
+  type Tray,
 } from 'electron';
+import { createTray, type TrayHandlers } from './tray.js';
 import { join } from 'node:path';
 import { readFileSync, existsSync, rmSync } from 'node:fs';
 import sharp from 'sharp';
@@ -45,6 +47,7 @@ import { saveImage as writeImageFile } from './save.js';
 let config: DesktopConfig;
 let controlWindow: BrowserWindow | null = null;
 let webWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
 let projectStore: ProjectStore;
 
 function webBaseDir(projectId: string): string {
@@ -465,6 +468,30 @@ function createControlWindow(): void {
   });
 }
 
+/** Show (or create) the control window, restoring the dock icon on macOS. */
+function showControlWindow(): void {
+  if (process.platform === 'darwin') app.dock?.show();
+  if (controlWindow && !controlWindow.isDestroyed()) {
+    controlWindow.show();
+    controlWindow.focus();
+  } else {
+    createControlWindow();
+  }
+}
+
+function trayHandlers(): TrayHandlers {
+  return {
+    capture: (mode) => void runCapture(mode),
+    openWeb: () => openWebWindow(),
+    showControl: () => showControlWindow(),
+    isBackground: () => config.runInBackground,
+    setBackground: (on) => {
+      config.runInBackground = on;
+      saveConfig(configPath(), config);
+    },
+  };
+}
+
 /** A minimal app menu so standard shortcuts (Cmd+Q, copy/paste, etc.) work. */
 function buildAppMenu(): void {
   const isMac = process.platform === 'darwin';
@@ -519,18 +546,25 @@ app.whenReady().then(() => {
   buildAppMenu();
   registerIpc();
   registerWebIpc();
-  createControlWindow();
+  tray = createTray(trayHandlers());
+  // Background mode: live in the menu bar with no window (and no dock on macOS).
+  if (config.runInBackground) {
+    if (process.platform === 'darwin') app.dock?.hide();
+  } else {
+    createControlWindow();
+  }
   applyHotkeys();
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createControlWindow();
-  });
+  app.on('activate', () => showControlWindow());
 });
 
-app.on('will-quit', () => globalShortcut.unregisterAll());
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+  tray?.destroy();
+});
 
-// Keep the app (and its global hotkeys) alive when windows are closed — standard
-// macOS behavior and right for a capture tool. The user quits explicitly (Cmd+Q).
-// On Windows/Linux, closing all windows quits.
+// The menu-bar / tray icon is the persistent UI, so closing all windows never
+// quits the app (on any platform) — global hotkeys stay live and the tray gives
+// access. The user quits explicitly via the tray "Quit Shotr" item or Cmd/Ctrl+Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  /* keep running in the tray */
 });

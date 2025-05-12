@@ -1,7 +1,7 @@
 {
   "name": "shotr-desktop",
-  "version": "0.1.0",
-  "description": "shotr Desktop — screen/window/region capture with an annotation editor.",
+  "version": "0.2.0",
+  "description": "shotr Desktop — screen/window/region capture, annotation editor, and web-capture UI.",
   "license": "MIT",
   "main": "./out/main/index.js",
   "scripts": {

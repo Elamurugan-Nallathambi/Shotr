@@ -17,6 +17,7 @@ describe('defaultConfig', () => {
     expect(c.saveDir).toBe('/home/me/Pictures/shotr');
     expect(c.format).toBe('png');
     expect(c.copyOnCapture).toBe(true);
+    expect(c.runInBackground).toBe(false);
   });
 });
 
@@ -44,6 +45,11 @@ describe('mergeConfig', () => {
   it('clamps and rounds jpegQuality', () => {
     expect(mergeConfig({ jpegQuality: 55.6 }, base).jpegQuality).toBe(56);
     expect(mergeConfig({ jpegQuality: 0 }, base).jpegQuality).toBe(base.jpegQuality);
+  });
+
+  it('toggles runInBackground only for booleans', () => {
+    expect(mergeConfig({ runInBackground: true }, base).runInBackground).toBe(true);
+    expect(mergeConfig({ runInBackground: 'yes' as never }, base).runInBackground).toBe(false);
   });
 });
 
