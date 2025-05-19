@@ -5,6 +5,8 @@ export const IPC = {
   setHotkey: 'shotr:setHotkey',
   getPermission: 'shotr:getPermission',
   requestAccess: 'shotr:requestAccess',
+  getBackground: 'shotr:getBackground',
+  setBackground: 'shotr:setBackground',
   openSettings: 'shotr:openSettings',
   closeControl: 'shotr:closeControl',
   minimizeControl: 'shotr:minimizeControl',

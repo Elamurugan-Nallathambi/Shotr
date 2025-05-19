@@ -64,6 +64,12 @@
       .hotkey.error { border-color: #e11d48; color: #fda4af; }
       @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 
+      .appmode { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 20px; }
+      .appmode .aml { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+      .seg { display: inline-flex; background: #0e1730; border: 1px solid #2b3b5c; border-radius: 9px; padding: 3px; gap: 3px; -webkit-app-region: no-drag; }
+      .seg button { background: none; border: none; color: var(--muted); padding: 6px 11px; border-radius: 7px; cursor: pointer; font-size: 12px; transition: background .1s, color .1s; }
+      .seg button:hover { color: #fff; }
+      .seg button.active { background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-weight: 600; }
       .status { margin-top: 16px; font-size: 12px; min-height: 16px; }
       .status.warn { color: #fbbf24; }
       .foot { margin-top: 10px; font-size: 11.5px; color: #5f6c82; }
@@ -146,6 +152,14 @@
           <span class="ic"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 10h15M10 2.5c2.5 2 2.5 13 0 15M10 2.5c-2.5 2-2.5 13 0 15" stroke="currentColor" stroke-width="1.3"/></svg></span>
           <div class="meta"><div class="t">Capture web pages</div><div class="d">URLs, auth &amp; full-page → report</div></div>
           <span class="key" style="color:#94a3b8;font-size:12px">Builder ›</span>
+        </div>
+      </div>
+
+      <div class="appmode">
+        <span class="aml">App mode</span>
+        <div class="seg" id="modeSeg">
+          <button type="button" data-bg="false" title="Show in the dock / taskbar">Dock &amp; Taskbar</button>
+          <button type="button" data-bg="true" title="Run in the menu bar with no dock/taskbar icon">Menu bar only</button>
         </div>
       </div>
 

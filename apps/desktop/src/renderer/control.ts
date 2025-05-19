@@ -10,6 +10,8 @@ declare global {
       setHotkey: (mode: Mode, accelerator: string) => Promise<{ ok: boolean; accelerator: string; error?: string }>;
       getPermission: () => Promise<string>;
       requestAccess: () => Promise<string>;
+      getBackground: () => Promise<boolean>;
+      setBackground: (on: boolean) => void;
       openSettings: () => void;
       close: () => void;
       minimize: () => void;
@@ -139,6 +141,21 @@ window.addEventListener('keydown', (e) => {
   if (result === null) return; // wait for a real combo
   void commit(recording, result);
 });
+
+// App mode: Dock & Taskbar vs Menu bar only (background tray app)
+function renderAppMode(background: boolean): void {
+  document.querySelectorAll('#modeSeg button').forEach((b) => {
+    b.classList.toggle('active', (b as HTMLElement).dataset.bg === String(background));
+  });
+}
+document.querySelectorAll('#modeSeg button').forEach((b) => {
+  b.addEventListener('click', () => {
+    const on = (b as HTMLElement).dataset.bg === 'true';
+    api?.setBackground(on);
+    renderAppMode(on);
+  });
+});
+void api?.getBackground().then((bg) => renderAppMode(Boolean(bg)));
 
 document.getElementById('webrow')?.addEventListener('click', () => window.shotrWeb?.open());
 document.getElementById('close')?.addEventListener('click', () => api?.close());

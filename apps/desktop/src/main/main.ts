@@ -13,7 +13,7 @@ import {
   type NativeImage,
   type Tray,
 } from 'electron';
-import { createTray, type TrayHandlers } from './tray.js';
+import { createTray, rebuildTrayMenu, type TrayHandlers } from './tray.js';
 import { join } from 'node:path';
 import { readFileSync, existsSync, rmSync } from 'node:fs';
 import sharp from 'sharp';
@@ -371,6 +371,8 @@ function registerIpc(): void {
   });
   ipcMain.on(IPC.closeControl, () => controlWindow?.close());
   ipcMain.on(IPC.minimizeControl, () => controlWindow?.minimize());
+  ipcMain.handle(IPC.getBackground, () => config.runInBackground);
+  ipcMain.on(IPC.setBackground, (_e, on: boolean) => applyBackgroundMode(on));
   ipcMain.on(IPC.resizeControl, (_e, height: number) => {
     if (!controlWindow) return;
     const h = Math.max(420, Math.min(940, Math.round(height)));
@@ -485,11 +487,25 @@ function trayHandlers(): TrayHandlers {
     openWeb: () => openWebWindow(),
     showControl: () => showControlWindow(),
     isBackground: () => config.runInBackground,
-    setBackground: (on) => {
-      config.runInBackground = on;
-      saveConfig(configPath(), config);
-    },
+    setBackground: (on) => applyBackgroundMode(on),
   };
+}
+
+/**
+ * Switch between a background menu-bar app (hidden from the dock/taskbar) and a
+ * normal windowed app. Persists the choice and applies it immediately.
+ */
+function applyBackgroundMode(on: boolean): void {
+  config.runInBackground = on;
+  saveConfig(configPath(), config);
+  if (process.platform === 'darwin') {
+    if (on) app.dock?.hide();
+    else void app.dock?.show();
+  } else {
+    // Windows/Linux: drop from the taskbar when running in the background.
+    for (const win of BrowserWindow.getAllWindows()) win.setSkipTaskbar(on);
+  }
+  if (tray) rebuildTrayMenu(tray, trayHandlers());
 }
 
 /** A minimal app menu so standard shortcuts (Cmd+Q, copy/paste, etc.) work. */

@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('shotr', {
     ipcRenderer.invoke(IPC.setHotkey, mode, accelerator),
   getPermission: () => ipcRenderer.invoke(IPC.getPermission),
   requestAccess: () => ipcRenderer.invoke(IPC.requestAccess),
+  getBackground: () => ipcRenderer.invoke(IPC.getBackground),
+  setBackground: (on: boolean) => ipcRenderer.send(IPC.setBackground, on),
   openSettings: () => ipcRenderer.send(IPC.openSettings),
   close: () => ipcRenderer.send(IPC.closeControl),
   minimize: () => ipcRenderer.send(IPC.minimizeControl),
